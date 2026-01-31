@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NotebookLM URL Pusher</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="popup">
+  <header class="popup-header">
+    <h1>NotebookLM URL Pusher</h1>
+    <a class="options-link" href="options.html" target="_blank" rel="noopener">設定</a>
+  </header>
+
+  <section class="card">
+    <label class="field-label" for="notebookSelect">送信先ノートブック</label>
+    <select id="notebookSelect"></select>
+    <p class="hint" id="notebookHint"></p>
+  </section>
+
+  <section class="card">
+    <label class="field-label">現在のURL</label>
+    <p class="current-url" id="currentUrl">取得中...</p>
+  </section>
+
+  <button id="sendButton" class="primary" disabled>このURLを追加</button>
+  <p class="status" id="status"></p>
+
+  <script src="popup.js"></script>
+</body>
+</html>
