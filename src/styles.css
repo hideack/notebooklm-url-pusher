@@ -21,7 +21,8 @@ body {
   color: var(--text);
 }
 
-h1, h2 {
+h1,
+h2 {
   margin: 0 0 8px;
   font-weight: 600;
 }
