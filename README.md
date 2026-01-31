@@ -25,6 +25,41 @@
 - `pnpm build` で本番ビルド
 - `pnpm zip` で配布用ZIPを生成
 
+## コマンド一覧
+
+| コマンド | 説明 |
+| --- | --- |
+| `pnpm dev` | 開発サーバー起動（WXT） |
+| `pnpm build` | プロダクションビルド |
+| `pnpm zip` | 配布用ZIPの作成 |
+| `pnpm typecheck` | TypeScript 型チェック |
+
+## プロジェクト構成（WXT）
+
+```
+src/
+├ entrypoints/
+│  ├ popup/               # ポップアップ
+│  │  ├ index.html
+│  │  └ main.ts
+│  ├ options/             # 設定画面
+│  │  ├ index.html
+│  │  └ main.ts
+│  ├ notebooklm.content.ts # NotebookLM DOM操作
+│  └ background.ts         # Service Worker
+├ lib/                    # 共有ユーティリティ
+└ styles.css              # 共通スタイル
+public/
+└ icons/                  # 拡張機能アイコン
+wxt.config.ts             # WXT/Manifest 設定
+```
+
+## 技術スタック
+
+- WXT
+- TypeScript
+- webextension-polyfill
+
 ## 開発について
 
 実装仕様・要件は `PROMPT.md` を参照してください。
