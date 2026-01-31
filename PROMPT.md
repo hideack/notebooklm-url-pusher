@@ -76,13 +76,13 @@ Chromeで閲覧中のNotebookLM以外のWebページURLを、
 
 ---
 
-### 2.3 バックグラウンド処理
+### 2.3 バックグラウンド処理（WXT background）
 
 * PUSH_URL メッセージを受信
 * NotebookLMを裏タブで開く
 * 既存タブがあれば再利用
 * ロード完了待機
-* content.jsへ命令送信
+* content scriptへ命令送信
 * 自動生成タブは完了後に閉じる
 
 ---
@@ -237,8 +237,8 @@ textarea[formcontrolname="urls"][aria-label="URL を入力"]
 
 ## 11. 品質基準
 
-* 外部ライブラリ禁止
-* Pure JS
+* WXT + TypeScript を前提（`browser` API）
+* 外部ライブラリは最小限（新規追加は理由を明記）
 * 安全なDOM探索
 * console.log整備
 
