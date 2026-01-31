@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NotebookLM URL Pusher 設定</title>
+  </head>
+  <body class="options">
+    <header class="options-header">
+      <h1>NotebookLM URL Pusher 設定</h1>
+      <p>NotebookLMノートブックを登録してください。</p>
+    </header>
+
+    <section class="card">
+      <h2>ノートブックを追加</h2>
+      <form id="addForm">
+        <label class="field-label" for="nameInput">表示名（任意）</label>
+        <input id="nameInput" type="text" placeholder="チーム資料" />
+
+        <label class="field-label" for="urlInput">NotebookLM ノートブックURL</label>
+        <input
+          id="urlInput"
+          type="url"
+          placeholder="https://notebooklm.google.com/notebook/..."
+          required
+        />
+
+        <button type="submit" class="primary">追加</button>
+        <p class="status" id="addStatus"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>登録済みノートブック</h2>
+      <div id="notebookList" class="list"></div>
+    </section>
+
+    <template id="notebookItemTemplate">
+      <div class="list-item">
+        <div class="list-fields">
+          <input class="name-field" type="text" placeholder="表示名" />
+          <input
+            class="url-field"
+            type="url"
+            placeholder="https://notebooklm.google.com/notebook/..."
+          />
+        </div>
+        <div class="list-actions">
+          <button class="secondary save-button">保存</button>
+          <button class="danger delete-button">削除</button>
+        </div>
+        <p class="status item-status"></p>
+      </div>
+    </template>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

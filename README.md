@@ -13,13 +13,18 @@
 
 ## 開発・動作確認方法
 
-1. このリポジトリをclone
-2. Chromeで chrome://extensions を開く
-3. デベロッパーモードをON
-4. 「パッケージ化されていない拡張機能を読み込む」
-5. src/ ディレクトリを指定
+1. `pnpm install`
+2. `pnpm dev`
+3. Chromeで `chrome://extensions` を開く
+4. デベロッパーモードをON
+5. 「パッケージ化されていない拡張機能を読み込む」
+6. `.output/chrome-mv3` を指定
+
+## ビルド
+
+- `pnpm build` で本番ビルド
+- `pnpm zip` で配布用ZIPを生成
 
 ## 開発について
 
-実装仕様・要件は PROMPT.md を参照してください。
-
+実装仕様・要件は `PROMPT.md` を参照してください。

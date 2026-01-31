@@ -125,40 +125,45 @@ Notebook {
 
 ---
 
-## 4. システム構成
+## 4. システム構成（WXT）
 
-| ファイル          | 役割    |
-| ------------- | ----- |
-| popup.js      | UI制御  |
-| background.js | タブ制御  |
-| content.js    | DOM操作 |
-| options.js    | 登録管理  |
+| ファイル                                   | 役割    |
+| -------------------------------------- | ----- |
+| src/entrypoints/popup/main.ts          | UI制御  |
+| src/entrypoints/background.ts          | タブ制御  |
+| src/entrypoints/notebooklm.content.ts  | DOM操作 |
+| src/entrypoints/options/main.ts        | 登録管理  |
 
 ---
 
-## 5. ディレクトリ構成
+## 5. ディレクトリ構成（WXT）
 
 ```
 src/
-├ manifest.json
-├ background.js
-├ content.js
-├ popup.html
-├ popup.js
-├ options.html
-├ options.js
+├ entrypoints/
+│  ├ popup/
+│  │  ├ index.html
+│  │  └ main.ts
+│  ├ options/
+│  │  ├ index.html
+│  │  └ main.ts
+│  ├ notebooklm.content.ts
+│  └ background.ts
+├ lib/
 ├ styles.css
+public/
 └ icons/
+wxt.config.ts
 ```
 
 ---
 
-## 6. Manifest仕様
+## 6. Manifest仕様（wxt.config.ts）
 
 * manifest_version: 3
 * permissions: storage, tabs, scripting
 * host_permissions: [https://notebooklm.google.com/](https://notebooklm.google.com/)*
-* content_scripts: notebooklmのみ
+* content_scripts: NotebookLMのみ（`defineContentScript` で指定）
 
 ---
 
@@ -252,4 +257,3 @@ textarea[formcontrolname="urls"][aria-label="URL を入力"]
 ---
 
 以上を厳守して実装すること。
-
