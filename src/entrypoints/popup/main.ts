@@ -105,7 +105,7 @@ const init = async () => {
     origin = "";
   }
 
-  const lastSelectedId = origin ? lastSelectedByOrigin[origin] : null;
+  const lastSelectedId = origin ? lastSelectedByOrigin[origin] ?? null : null;
   populateNotebooks(notebooks, lastSelectedId);
 
   if (notebooks.length === 0) {

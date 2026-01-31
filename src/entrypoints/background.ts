@@ -23,7 +23,7 @@ export default defineBackground(() => {
 
 const waitForTabComplete = (tabId: number, timeoutMs = 30000) =>
   new Promise<void>((resolve, reject) => {
-    let timeoutId: number | undefined;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const cleanup = () => {
       if (timeoutId !== undefined) {
