@@ -18,7 +18,7 @@
 3. Chromeで `chrome://extensions` を開く
 4. デベロッパーモードをON
 5. 「パッケージ化されていない拡張機能を読み込む」
-6. `.output/chrome-mv3` を指定
+6. `pnpm dev` の場合は `.output/chrome-mv3-dev` を指定（`pnpm build` 後は `.output/chrome-mv3`）
 
 ## ビルド
 
@@ -53,6 +53,11 @@ public/
 └ icons/                  # 拡張機能アイコン
 wxt.config.ts             # WXT/Manifest 設定
 ```
+
+## デバッグのヒント
+
+- Service Worker ログは `chrome://extensions` の「Service worker」から確認
+- NotebookLM タブ側のログは通常の DevTools コンソール
 
 ## 技術スタック
 
