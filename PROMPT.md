@@ -84,6 +84,7 @@ Chromeで閲覧中のNotebookLM以外のWebページURLを、
 * ロード完了待機
 * content scriptへ命令送信
 * 自動生成タブは完了後に閉じる
+* 送信は `ADD_URL` のレスポンスを待ち、失敗時はエラーを返す
 
 ---
 
@@ -198,6 +199,13 @@ textarea[formcontrolname="urls"][aria-label="URL を入力"]
 ```
 .mdc-button__label == "挿入"
 ```
+
+---
+
+## 8. 開発出力（WXT）
+
+- `pnpm dev` の出力先: `.output/chrome-mv3-dev`
+- `pnpm build` の出力先: `.output/chrome-mv3`
 
 ## DOM操作の実装注意（重要）
 
