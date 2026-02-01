@@ -1,25 +1,18 @@
-import "../../styles.css";
-import { NOTEBOOK_ORIGIN } from "@/lib/notebook";
-import type { Notebook, StorageState } from "@/lib/types";
-
 const INVALID_PREFIXES = ["chrome://", "chrome-extension://", "about:", "edge://"];
+const NOTEBOOK_ORIGIN = "https://notebooklm.google.com";
 
-const notebookSelect = document.getElementById("notebookSelect") as HTMLSelectElement | null;
+const notebookSelect = document.getElementById("notebookSelect");
 const notebookHint = document.getElementById("notebookHint");
 const currentUrlEl = document.getElementById("currentUrl");
-const sendButton = document.getElementById("sendButton") as HTMLButtonElement | null;
+const sendButton = document.getElementById("sendButton");
 const statusEl = document.getElementById("status");
 
-if (!notebookSelect || !notebookHint || !currentUrlEl || !sendButton || !statusEl) {
-  throw new Error("Popup elements not found.");
-}
-
-const setStatus = (message: string, isError = false) => {
+const setStatus = (message, isError = false) => {
   statusEl.textContent = message;
   statusEl.style.color = isError ? "#dc2626" : "#6b7280";
 };
 
-const isInvalidUrl = (url: string) => {
+const isInvalidUrl = (url) => {
   if (!url) {
     return true;
   }
@@ -33,34 +26,29 @@ const isInvalidUrl = (url: string) => {
     if (parsed.origin === NOTEBOOK_ORIGIN) {
       return true;
     }
-  } catch {
+  } catch (error) {
     return true;
   }
   return false;
 };
 
 const getActiveTab = async () => {
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab;
 };
 
-const loadState = async (): Promise<StorageState> => {
-  const data = (await browser.storage.sync.get({
-    notebooks: [],
-    lastSelectedByOrigin: {},
-  })) as StorageState;
+const loadState = async () => {
+  const data = await chrome.storage.sync.get({ notebooks: [], lastSelectedByOrigin: {} });
   return data;
 };
 
-const saveLastSelected = async (origin: string, notebookId: string) => {
-  const data = (await browser.storage.sync.get({
-    lastSelectedByOrigin: {},
-  })) as StorageState;
+const saveLastSelected = async (origin, notebookId) => {
+  const data = await chrome.storage.sync.get({ lastSelectedByOrigin: {} });
   const updated = { ...data.lastSelectedByOrigin, [origin]: notebookId };
-  await browser.storage.sync.set({ lastSelectedByOrigin: updated });
+  await chrome.storage.sync.set({ lastSelectedByOrigin: updated });
 };
 
-const populateNotebooks = (notebooks: Notebook[], lastSelectedId: string | null) => {
+const populateNotebooks = (notebooks, lastSelectedId) => {
   notebookSelect.innerHTML = "";
   for (const notebook of notebooks) {
     const option = document.createElement("option");
@@ -86,7 +74,7 @@ const populateNotebooks = (notebooks: Notebook[], lastSelectedId: string | null)
 
 const init = async () => {
   const tab = await getActiveTab();
-  const pageUrl = tab?.url ?? "";
+  const pageUrl = tab && tab.url ? tab.url : "";
 
   currentUrlEl.textContent = pageUrl || "取得できません";
 
@@ -101,11 +89,11 @@ const init = async () => {
   let origin = "";
   try {
     origin = new URL(pageUrl).origin;
-  } catch {
+  } catch (error) {
     origin = "";
   }
 
-  const lastSelectedId = origin ? lastSelectedByOrigin[origin] ?? null : null;
+  const lastSelectedId = origin ? lastSelectedByOrigin[origin] : null;
   populateNotebooks(notebooks, lastSelectedId);
 
   if (notebooks.length === 0) {
@@ -137,11 +125,11 @@ const init = async () => {
     }
 
     try {
-      const response = (await browser.runtime.sendMessage({
+      const response = await chrome.runtime.sendMessage({
         type: "PUSH_URL",
         pageUrl,
-        notebookUrl: notebook.url,
-      })) as { ok: boolean; error?: string } | undefined;
+        notebookUrl: notebook.url
+      });
 
       if (!response || !response.ok) {
         throw new Error(response && response.error ? response.error : "送信に失敗しました。");
@@ -150,7 +138,7 @@ const init = async () => {
       await saveLastSelected(origin, notebook.id);
       setStatus("送信が完了しました。");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "送信に失敗しました。", true);
+      setStatus(error.message || "送信に失敗しました。", true);
     } finally {
       sendButton.disabled = false;
     }
