@@ -1,21 +1,30 @@
-import "../../styles.css";
-import { normalizeNotebookUrl } from "@/lib/notebook";
-import type { Notebook } from "@/lib/types";
+const NOTEBOOK_ORIGIN = "https://notebooklm.google.com";
 
-const addForm = document.getElementById("addForm") as HTMLFormElement | null;
-const nameInput = document.getElementById("nameInput") as HTMLInputElement | null;
-const urlInput = document.getElementById("urlInput") as HTMLInputElement | null;
+const addForm = document.getElementById("addForm");
+const nameInput = document.getElementById("nameInput");
+const urlInput = document.getElementById("urlInput");
 const addStatus = document.getElementById("addStatus");
 const notebookList = document.getElementById("notebookList");
-const itemTemplate = document.getElementById("notebookItemTemplate") as HTMLTemplateElement | null;
+const itemTemplate = document.getElementById("notebookItemTemplate");
 
-if (!addForm || !nameInput || !urlInput || !addStatus || !notebookList || !itemTemplate) {
-  throw new Error("Options elements not found.");
-}
-
-const setStatus = (el: HTMLElement, message: string, isError = false) => {
+const setStatus = (el, message, isError = false) => {
   el.textContent = message;
   el.style.color = isError ? "#dc2626" : "#6b7280";
+};
+
+const normalizeNotebookUrl = (rawUrl) => {
+  const parsed = new URL(rawUrl);
+  if (parsed.origin !== NOTEBOOK_ORIGIN) {
+    throw new Error("NotebookLMのURLではありません。");
+  }
+  if (!parsed.pathname.startsWith("/notebook/") || parsed.pathname.length <= "/notebook/".length) {
+    throw new Error("ノートブックURLの形式が正しくありません。");
+  }
+  let pathname = parsed.pathname;
+  if (pathname.endsWith("/")) {
+    pathname = pathname.slice(0, -1);
+  }
+  return `${parsed.origin}${pathname}`;
 };
 
 const generateId = () => {
@@ -26,15 +35,15 @@ const generateId = () => {
 };
 
 const loadNotebooks = async () => {
-  const data = (await browser.storage.sync.get({ notebooks: [] })) as { notebooks: Notebook[] };
+  const data = await chrome.storage.sync.get({ notebooks: [] });
   return data.notebooks;
 };
 
-const saveNotebooks = async (notebooks: Notebook[]) => {
-  await browser.storage.sync.set({ notebooks });
+const saveNotebooks = async (notebooks) => {
+  await chrome.storage.sync.set({ notebooks });
 };
 
-const renderList = (notebooks: Notebook[]) => {
+const renderList = (notebooks) => {
   notebookList.innerHTML = "";
   if (notebooks.length === 0) {
     notebookList.textContent = "登録済みノートブックはありません。";
@@ -42,17 +51,13 @@ const renderList = (notebooks: Notebook[]) => {
   }
 
   for (const notebook of notebooks) {
-    const fragment = itemTemplate.content.cloneNode(true) as DocumentFragment;
-    const item = fragment.querySelector(".list-item") as HTMLElement | null;
-    const nameField = fragment.querySelector(".name-field") as HTMLInputElement | null;
-    const urlField = fragment.querySelector(".url-field") as HTMLInputElement | null;
-    const saveButton = fragment.querySelector(".save-button") as HTMLButtonElement | null;
-    const deleteButton = fragment.querySelector(".delete-button") as HTMLButtonElement | null;
-    const statusEl = fragment.querySelector(".item-status") as HTMLElement | null;
-
-    if (!item || !nameField || !urlField || !saveButton || !deleteButton || !statusEl) {
-      continue;
-    }
+    const fragment = itemTemplate.content.cloneNode(true);
+    const item = fragment.querySelector(".list-item");
+    const nameField = fragment.querySelector(".name-field");
+    const urlField = fragment.querySelector(".url-field");
+    const saveButton = fragment.querySelector(".save-button");
+    const deleteButton = fragment.querySelector(".delete-button");
+    const statusEl = fragment.querySelector(".item-status");
 
     nameField.value = notebook.name || "";
     urlField.value = notebook.url;
@@ -75,14 +80,14 @@ const renderList = (notebooks: Notebook[]) => {
           return {
             ...n,
             name: updatedName,
-            url: normalizedUrl,
+            url: normalizedUrl
           };
         });
 
         await saveNotebooks(updated);
         setStatus(statusEl, "保存しました。");
       } catch (error) {
-        setStatus(statusEl, error instanceof Error ? error.message : "保存に失敗しました。", true);
+        setStatus(statusEl, error.message || "保存に失敗しました。", true);
       }
     });
 
@@ -114,11 +119,11 @@ const init = async () => {
         throw new Error("同じURLのノートブックが既に登録されています。");
       }
 
-      const newNotebook: Notebook = {
+      const newNotebook = {
         id: generateId(),
         name,
         url: normalizedUrl,
-        createdAt: Date.now(),
+        createdAt: Date.now()
       };
 
       const updated = [...current, newNotebook];
@@ -129,7 +134,7 @@ const init = async () => {
       urlInput.value = "";
       setStatus(addStatus, "追加しました。");
     } catch (error) {
-      setStatus(addStatus, error instanceof Error ? error.message : "追加に失敗しました。", true);
+      setStatus(addStatus, error.message || "追加に失敗しました。", true);
     }
   });
 };
