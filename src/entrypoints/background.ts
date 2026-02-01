@@ -13,11 +13,17 @@ type PushUrlResponse = {
 };
 
 export default defineBackground(() => {
-  browser.runtime.onMessage.addListener((message) => {
+  browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (!message || message.type !== "PUSH_URL") {
-      return undefined;
+      return false;
     }
-    return handlePushUrl(message as PushUrlMessage);
+
+    (async () => {
+      const response = await handlePushUrl(message as PushUrlMessage);
+      sendResponse(response);
+    })();
+
+    return true;
   });
 });
 
@@ -57,42 +63,22 @@ const waitForTabComplete = (tabId: number, timeoutMs = 30000) =>
       .catch(() => undefined);
   });
 
-const waitForContentScript = async (tabId: number, timeoutMs = 20000) => {
-  const start = Date.now();
+const sendAddUrlMessage = async (tabId: number, pageUrl: string, retries = 3) => {
   let lastError: unknown = null;
-  while (Date.now() - start < timeoutMs) {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
     try {
-      const response = await browser.tabs.sendMessage(tabId, { type: "PING" });
-      if (response && response.ok) {
-        console.log("PUSH_URL: ping ok", tabId);
-        return;
-      }
+      return await browser.tabs.sendMessage(tabId, {
+        type: "ADD_URL",
+        url: pageUrl,
+      });
     } catch (error) {
       lastError = error;
-      // Ignore until content script is ready.
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
-    await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  throw new Error(
-    `NotebookLMの初期化が完了しませんでした。${lastError instanceof Error ? ` (${lastError.message})` : ""}`,
-  );
-};
-
-const ensureContentScript = async (tabId: number) => {
-  try {
-    await waitForContentScript(tabId, 5000);
-    return;
-  } catch {
-    // Fall through to manual injection.
-  }
-
-  console.log("PUSH_URL: inject content script", tabId);
-  await browser.scripting.executeScript({
-    target: { tabId },
-    files: ["content-scripts/notebooklm.js"],
-  });
-
-  await waitForContentScript(tabId, 20000);
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("NotebookLMのコンテンツスクリプトに接続できませんでした。");
 };
 
 const findNotebookTab = async (normalizedUrl: string) => {
@@ -116,51 +102,30 @@ const findNotebookTab = async (normalizedUrl: string) => {
 const handlePushUrl = async (message: PushUrlMessage): Promise<PushUrlResponse> => {
   try {
     const normalizedNotebookUrl = normalizeNotebookUrl(message.notebookUrl);
-    const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
     const existingTab = await findNotebookTab(normalizedNotebookUrl);
     let tab = existingTab;
     let shouldClose = false;
-    let shouldRestoreActive = false;
 
     if (!tab) {
-      tab = await browser.tabs.create({ url: normalizedNotebookUrl, active: true });
+      tab = await browser.tabs.create({ url: normalizedNotebookUrl, active: false });
       shouldClose = true;
-      shouldRestoreActive = true;
-    } else if (!tab.active) {
-      await browser.tabs.update(tab.id, { active: true });
-      shouldRestoreActive = true;
     }
 
     if (!tab?.id) {
       throw new Error("NotebookLMタブを取得できませんでした。");
     }
 
-    let succeeded = false;
     try {
-      const tabInfo = await browser.tabs.get(tab.id);
-      console.log("PUSH_URL: target tab", tab.id, tabInfo.url);
-      console.log("PUSH_URL: wait for tab complete", tab.id);
-      await waitForTabComplete(tab.id, 60000);
-      console.log("PUSH_URL: ensure content script", tab.id);
-      await ensureContentScript(tab.id);
-      console.log("PUSH_URL: sending ADD_URL", tab.id);
-
-      const response = await browser.tabs.sendMessage(tab.id, {
-        type: "ADD_URL",
-        url: message.pageUrl,
-      });
+      await waitForTabComplete(tab.id, 30000);
+      const response = await sendAddUrlMessage(tab.id, message.pageUrl);
 
       if (!response || !response.ok) {
         throw new Error(response && response.error ? response.error : "NotebookLM操作に失敗しました。");
       }
 
-      succeeded = true;
       return { ok: true, detail: response };
     } finally {
-      if (shouldRestoreActive && activeTab?.id && activeTab.id !== tab.id) {
-        await browser.tabs.update(activeTab.id, { active: true });
-      }
-      if (shouldClose && succeeded) {
+      if (shouldClose) {
         await browser.tabs.remove(tab.id);
       }
     }
